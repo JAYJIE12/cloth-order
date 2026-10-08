@@ -155,7 +155,7 @@ function renderLanding() {
     <section class="page landing">
       <div class="landing-hero">
         <div>
-          <span class="eyebrow">你的当季穿衣助手</span>
+          <span class="eyebrow">V0.1 · 你的当季穿衣助手</span>
           <h1>今天穿什么，<br><em>不用再想。</em></h1>
           <p class="lead">从你的个人色彩、现在会穿的衣服和天气开始，每天给你一套恰到好处的答案。</p>
           <div class="hero-actions">
