@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7f4f7" />
+    <meta
+      name="description"
+      content="cloth-order：根据你的个人色彩、当季衣柜和天气，帮你决定今天穿什么。"
+    />
+    <title>cloth-order · 今天穿什么，不用再想</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Mono&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar" id="topbar">
+        <button class="brand" type="button" data-action="go-home" aria-label="返回首页">
+          <span class="brand-mark">c/o</span>
+          <span class="brand-name">cloth-order</span>
+        </button>
+        <nav class="desktop-nav" aria-label="主导航">
+          <button type="button" data-view="today">今日穿搭</button>
+          <button type="button" data-view="closet">我的衣柜</button>
+          <button type="button" data-view="profile">我的颜色</button>
+        </nav>
+        <button class="avatar-button" type="button" data-view="profile" aria-label="打开个人色彩">
+          <span>Y</span>
+        </button>
+      </header>
+
+      <main id="app" tabindex="-1"></main>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav" aria-label="底部导航">
+      <button type="button" data-view="today"><span>☼</span>今天</button>
+      <button type="button" data-view="closet"><span>▦</span>衣柜</button>
+      <button type="button" data-view="profile"><span>✦</span>颜色</button>
+    </nav>
+
+    <div id="modal-root"></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js"></script>
+  </body>
+</html>
+
