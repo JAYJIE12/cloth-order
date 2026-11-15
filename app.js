@@ -1,27 +1,5 @@
 const STORAGE_KEY = "cloth-order-v01";
 
-const COLOR_PROFILE = {
-  season: "夏季冷柔型",
-  short: "夏冷柔",
-  english: "Summer Soft",
-  confidence: 86,
-  undertone: "冷调",
-  brightness: 72,
-  saturation: 35,
-  contrast: 42,
-  recommended: [
-    { name: "冷白", hex: "#EDECEB" },
-    { name: "雾霾蓝", hex: "#8CA5BC" },
-    { name: "灰紫", hex: "#9E98B4" },
-    { name: "莓果红", hex: "#A96378" },
-    { name: "浅灰", hex: "#B5B6BD" },
-  ],
-  careful: [
-    { name: "橙黄", hex: "#DA9A4A" },
-    { name: "土黄", hex: "#B6975C" },
-    { name: "暖棕", hex: "#956A55" },
-  ],
-};
 
 const DEMO_CLOTHES = [
   { id: "d1", name: "雾霾蓝衬衫", type: "上装", color: "#8CA5BC", temp: "20–27℃", icon: "♧" },
@@ -36,57 +14,12 @@ const DEMO_CLOTHES = [
   { id: "d10", name: "灰紫半裙", type: "下装", color: "#9E98B4", temp: "18–27℃", icon: "⌁" },
 ];
 
-const QUIZ = [
-  {
-    eyebrow: "第一个线索",
-    title: "哪种首饰更能让你的肤色显得干净？",
-    description: "凭直觉选择即可。没有绝对正确答案，我们会把它当作一个颜色线索。",
-    options: [
-      { symbol: "◌", title: "银色 / 铂金", text: "清冷、利落、显气色", value: "cool" },
-      { symbol: "●", title: "金色 / 香槟金", text: "温暖、柔和、显光泽", value: "warm" },
-      { symbol: "◐", title: "都可以", text: "我不太确定", value: "neutral" },
-      { symbol: "✦", title: "没注意过", text: "跳过这个线索", value: "skip" },
-    ],
-  },
-  {
-    eyebrow: "第二个线索",
-    title: "穿哪一种白色时，你看起来更有精神？",
-    description: "可以想一想自己穿衬衫、T 恤或连衣裙的感觉。",
-    options: [
-      { symbol: "□", title: "纯白 / 冷白", text: "更清爽、肤色更透亮", value: "cool" },
-      { symbol: "◒", title: "米白 / 奶油白", text: "更柔和、不显蜡黄", value: "warm" },
-      { symbol: "◈", title: "浅灰白", text: "最安全、最自在", value: "soft" },
-      { symbol: "?", title: "我不确定", text: "跳过这个线索", value: "skip" },
-    ],
-  },
-  {
-    eyebrow: "第三个线索",
-    title: "你穿深色和浅色，哪一种更衬你？",
-    description: "选择让面部轮廓更清晰、肤色更均匀的一边。",
-    options: [
-      { symbol: "●", title: "浅色更好", text: "柔和、轻盈的色彩", value: "light" },
-      { symbol: "■", title: "深色更好", text: "有对比度的深色", value: "deep" },
-      { symbol: "◑", title: "中间色更好", text: "灰、蓝、雾感色系", value: "soft" },
-      { symbol: "?", title: "看情况", text: "不同场合不同", value: "skip" },
-    ],
-  },
-  {
-    eyebrow: "最后一个线索",
-    title: "你最常收到哪一种颜色的夸奖？",
-    description: "请选择让你最有自信的那一类颜色。",
-    options: [
-      { symbol: "◌", title: "灰蓝 / 薰衣草紫", text: "轻柔、偏冷的颜色", value: "cool-soft" },
-      { symbol: "●", title: "焦糖 / 橄榄绿", text: "自然、偏暖的颜色", value: "warm-soft" },
-      { symbol: "◆", title: "正红 / 宝蓝", text: "清晰、饱和的颜色", value: "bright" },
-      { symbol: "?", title: "还没有发现", text: "之后可以从衣柜反馈中学习", value: "skip" },
-    ],
-  },
-];
 
 let state = loadState();
 let currentView = state.profile ? "today" : "landing";
 let quizIndex = 0;
 let quizAnswers = [];
+let quizReturnView = "landing";
 let closetFilter = "全部";
 let toastTimer;
 let selectedOutfit = 0;
@@ -140,7 +73,9 @@ function render() {
   }[currentView]();
   syncNavigation();
   bindEvents();
-  app.focus({ preventScroll: true });
+  const quizHeading = app.querySelector("[data-quiz-heading]");
+  if (quizHeading) quizHeading.focus();
+  else app.focus({ preventScroll: true });
 }
 
 function syncNavigation() {
@@ -155,14 +90,14 @@ function renderLanding() {
     <section class="page landing">
       <div class="landing-hero">
         <div>
-          <span class="eyebrow">V0.1 · 你的当季穿衣助手</span>
+          <span class="eyebrow">V0.2 · 你的当季穿衣助手</span>
           <h1>今天穿什么，<br><em>不用再想。</em></h1>
           <p class="lead">从你的个人色彩、现在会穿的衣服和天气开始，每天给你一套恰到好处的答案。</p>
           <div class="hero-actions">
-            <button class="button button-primary" data-action="start-quiz">免费测试我的颜色 <span>→</span></button>
+            <button class="button button-primary" data-action="start-quiz">开始颜色测试 <span aria-hidden="true">→</span></button>
             <button class="button button-secondary" data-action="open-demo">看看效果</button>
           </div>
-          <p class="landing-note">约 2 分钟 · 不需要上传照片 · 结果仅保存在当前设备</p>
+          <p class="landing-note">约 1–2 分钟 · 无需自拍 · 结果保存在此浏览器</p>
         </div>
         <div class="hero-card" aria-label="今日穿搭示例">
           <div class="hero-card-top"><span>今日推荐</span><span class="weather-mini">☁ 22° · 微凉</span></div>
@@ -173,11 +108,11 @@ function renderLanding() {
               ${garment({ name: "冷白运动鞋", color: "#E8E8E5", icon: "⌂" })}
             </div>
           </div>
-          <div class="hero-match"><div class="match-ring"><span>91</span></div><div><b>很适合你今天的颜色</b><small>通勤 · 18–25℃ · 阴天</small></div></div>
+          <div class="hero-match"><div><b>雾霾蓝配浅灰</b><small>通勤 · 18–25℃ · 阴天</small></div></div>
         </div>
       </div>
       <div class="steps">
-        <article class="step"><span class="step-number">01</span><h3>认识你</h3><p>用几道直觉题，建立可持续调整的个人色彩参考。</p></article>
+        <article class="step"><span class="step-number">01</span><h3>认识你</h3><p>对比 6 组服装色卡，找到可以先试穿的颜色。</p></article>
         <article class="step"><span class="step-number">02</span><h3>认识衣柜</h3><p>先上传最近会穿的 10–20 件，不用一次整理所有衣服。</p></article>
         <article class="step"><span class="step-number">03</span><h3>每天帮你选</h3><p>结合天气与反馈，给出一套真正会穿出门的搭配。</p></article>
       </div>
@@ -185,50 +120,76 @@ function renderLanding() {
 }
 
 function renderQuiz() {
-  const question = QUIZ[quizIndex];
+  const question = COLOR_QUESTIONS[quizIndex];
   const answer = quizAnswers[quizIndex];
-  const isLast = quizIndex === QUIZ.length - 1;
+  const step = quizIndex + 1;
+  const total = COLOR_QUESTIONS.length;
+  const choice = (index, label, hex) => `
+    <button type="button" class="quiz-choice ${hex ? "quiz-color-choice" : "quiz-unsure"}"
+      aria-pressed="${answer === index}" data-action="select-answer" data-index="${index}">
+      ${hex ? `<span class="quiz-swatch" style="--swatch:${hex}" aria-hidden="true"></span>` : ""}
+      <span class="quiz-choice-label">${label}<span class="quiz-check" aria-hidden="true">✓</span></span>
+    </button>`;
+
   return `
     <section class="page quiz-wrap">
       <div class="quiz-head">
-        <button class="back-button" data-action="quiz-back">← ${quizIndex === 0 ? "返回首页" : "上一题"}</button>
-        <div class="quiz-progress"><span style="width:${((quizIndex + 1) / QUIZ.length) * 100}%"></span></div>
-        <span class="quiz-step">${String(quizIndex + 1).padStart(2, "0")} / ${String(QUIZ.length).padStart(2, "0")}</span>
+        <button class="back-button" data-action="quiz-back">← ${quizIndex === 0 ? "退出测试" : "上一题"}</button>
+        <progress class="quiz-progress" value="${step}" max="${total}" aria-label="测试进度"></progress>
+        <span class="quiz-step" id="quiz-step">第 ${step} / ${total} 题</span>
       </div>
       <div class="quiz-card">
-        <span class="eyebrow">${question.eyebrow}</span>
-        <h1>${question.title}</h1>
-        <p>${question.description}</p>
-        <div class="question-options">
-          ${question.options.map((option, index) => `
-            <button class="question-option ${answer === index ? "selected" : ""}" data-action="select-answer" data-index="${index}">
-              <span class="option-symbol">${option.symbol}</span>
-              <span><strong>${option.title}</strong><small>${option.text}</small></span>
-            </button>`).join("")}
+        <h1 tabindex="-1" data-quiz-heading aria-describedby="quiz-step">穿在脸附近时，哪种颜色更衬你？</h1>
+        <p>想想穿类似颜色时的样子。如果两种感觉差不多，可以选「看不出差别」。</p>
+        <div class="quiz-choices" role="group" aria-label="选择一项">
+          ${question.options.map(([name, hex], index) => choice(index, name, hex)).join("")}
+          ${choice(question.options.length, "看不出差别")}
         </div>
-        <div class="quiz-footer"><button class="button button-primary" ${answer === undefined ? "disabled" : ""} data-action="quiz-next">${isLast ? "查看我的结果" : "下一题"} <span>→</span></button></div>
+        <div class="quiz-footer">
+          <button class="button button-primary" ${answer === undefined ? "disabled" : ""} data-action="quiz-next">
+            ${step === total ? "查看结果" : "下一题"} <span aria-hidden="true">→</span>
+          </button>
+        </div>
       </div>
-      <p class="quiz-privacy">这是一份穿衣颜色参考，不替代专业个人色彩诊断。</p>
     </section>`;
 }
 
+function renderPalette(colors) {
+  return `<ul class="color-palette">${colors.map(([name, hex]) =>
+    `<li>${colorFor(hex)}<span>${name}</span></li>`).join("")}</ul>`;
+}
+
+function renderColorSummary(profile) {
+  const { name, tip, colors } = colorPalette(profile);
+  const tested = profile.kind === "color-test-v2";
+  return `
+    <div class="result-heading">
+      <span class="eyebrow">${tested ? "个人色彩 · 穿衣参考" : "示例色卡"}</span>
+      <h1 tabindex="-1" data-quiz-heading>${name}</h1>
+      <p>${tested ? "这是根据你选择的颜色整理出的穿衣参考。" : "完成测试后，就能看到根据你的答题生成的色卡。"}</p>
+    </div>
+    <div class="result-main">
+      <article class="card result-data">
+        <h2>${tested ? "你的答题线索" : "色彩方向"}</h2>
+        <dl class="color-reasons">${Object.entries(COLOR_AXES).map(([axis, { name, choices }]) =>
+          `<div><dt>${name}</dt><dd>${tested ? colorAnswerReason(profile, axis) : choices[profile[axis]]}</dd></div>`).join("")}</dl>
+      </article>
+      <article class="card result-data">
+        <h2>可以先试这 5 个颜色</h2>
+        ${renderPalette(colors)}
+        <p class="recommendation-note">${tip}</p>
+      </article>
+    </div>`;
+}
+
 function renderResult() {
-  const p = COLOR_PROFILE;
   return `
     <section class="page color-result">
-      <div class="result-heading"><span class="eyebrow">你的 Personal Color</span><h1>你是 <em>${p.season}</em></h1><p>偏冷、低饱和的颜色会让肤色更清透。把它当作穿衣的起点，而不是限制。</p></div>
-      <div class="result-main">
-        <article class="season-card"><span class="season-caption">PERSONAL COLOR / 01</span><h2>${p.english}</h2><p>柔雾感的冷色、低对比度搭配，是你最不费力的好气色。</p><span class="confidence">匹配参考度 ${p.confidence}%</span></article>
-        <article class="card result-data"><h3>你的色彩关键词</h3>
-          <div class="metric-row"><span>冷暖</span><div class="metric-line"><span style="width:72%"></span></div><b>${p.undertone}</b></div>
-          <div class="metric-row"><span>明度</span><div class="metric-line"><span style="width:${p.brightness}%"></span></div><b>中高</b></div>
-          <div class="metric-row"><span>饱和度</span><div class="metric-line"><span style="width:${p.saturation}%"></span></div><b>柔和</b></div>
-          <div class="metric-row"><span>对比度</span><div class="metric-line"><span style="width:${p.contrast}%"></span></div><b>偏低</b></div>
-          <div class="result-palette"><h4>先从这些颜色开始</h4><div class="palette-large">${p.recommended.map((c) => colorFor(c.hex)).join("")}</div></div>
-          <div class="recommendation-note">试试让一套搭配里有 2–3 个相近明度的冷色，效果往往比“高饱和撞色”更自然。</div>
-        </article>
+      ${renderColorSummary(state.profile)}
+      <div class="result-action">
+        <button class="button button-primary" data-action="continue-closet">进入我的衣柜 <span aria-hidden="true">→</span></button>
+        <button class="button button-secondary" data-action="restart-quiz">重新测试</button>
       </div>
-      <div class="result-action"><button class="button button-primary" data-action="continue-closet">分析我的衣柜 <span>→</span></button></div>
     </section>`;
 }
 
@@ -242,15 +203,14 @@ function weatherData() {
 
 function outfits() {
   const weather = weatherData();
-  const hasClothes = state.closet.length > 0;
   const top = state.closet.find((item) => item.type === "上装") || DEMO_CLOTHES[0];
   const bottom = state.closet.find((item) => item.type === "下装") || DEMO_CLOTHES[3];
   const altTop = state.closet.filter((item) => item.type === "上装")[1] || DEMO_CLOTHES[6];
   const altBottom = state.closet.filter((item) => item.type === "下装")[1] || DEMO_CLOTHES[7];
   return [
-    { label: "首选", score: hasClothes ? 91 : 88, name: `${top.name} × ${bottom.name}`, note: weather.note, main: top, secondary: bottom, bg: weather.bg },
-    { label: "更休闲", score: hasClothes ? 86 : 84, name: `${altTop.name} × ${altBottom.name}`, note: "轻松但不随意", main: altTop, secondary: altBottom, bg: "#E4E9EC" },
-    { label: "更利落", score: hasClothes ? 83 : 81, name: "冷白上衣 × 深灰下装", note: "干净、低对比度", main: DEMO_CLOTHES[1], secondary: DEMO_CLOTHES[2], bg: "#EDE9E4" },
+    { label: "首选", name: `${top.name} × ${bottom.name}`, note: weather.note, main: top, secondary: bottom, bg: weather.bg },
+    { label: "更休闲", name: `${altTop.name} × ${altBottom.name}`, note: "轻松但不随意", main: altTop, secondary: altBottom, bg: "#E4E9EC" },
+    { label: "更利落", name: "冷白上衣 × 深灰下装", note: "干净、低对比度", main: DEMO_CLOTHES[1], secondary: DEMO_CLOTHES[2], bg: "#EDE9E4" },
   ];
 }
 
@@ -260,22 +220,25 @@ function renderToday() {
   const looks = outfits();
   const current = looks[selectedOutfit];
   const feedback = state.feedback.today;
+  const { profile } = state;
+  const hasPalette = profile.kind === "color-test-v2" || profile.kind === "demo";
+  const palette = hasPalette ? colorPalette(profile) : null;
   return `
     <section class="page">
       <header class="page-header"><div><span class="eyebrow">DAILY EDIT</span><h1>今天，穿这一套。</h1><p class="subcopy">${state.closet.length ? "从你的当季衣柜里，挑出一个不用犹豫的答案。" : "先用示例搭配看看产品效果；添加衣物后会换成你的衣柜。"}</p></div></header>
       <div class="dashboard-grid">
         <section class="card today-hero">
           <div class="weather-strip"><div class="weather-place"><strong>${weather.city}</strong>${weather.day}</div><div class="weather-main"><span class="weather-icon">${weather.icon}</span><div><strong>${weather.temp}</strong><span>${weather.note}</span></div></div><button class="weather-control" data-action="change-weather">模拟天气</button></div>
-          <h2 class="today-title">${weather.title}</h2><p class="today-subtitle">${current.label}建议 · ${current.score}% 色彩与天气匹配</p>
-          <div class="outfit-card" style="background:${current.bg}"><div class="outfit-card-main">${garment(current.main, "large")}</div><div class="outfit-meta"><span class="match-line">MATCH ${current.score}%</span><h3>${esc(current.name)}</h3><p>和你的 ${COLOR_PROFILE.short} 相衬，也符合今天的温度与场合。</p><div class="outfit-actions"><button class="button button-primary button-small" data-action="wear-this">${feedback === "wear" ? "已记录 ✓" : "就穿这套"}</button><button class="button button-secondary button-small" data-action="show-alternatives">换一套</button></div></div></div>
+          <h2 class="today-title">${weather.title}</h2><p class="today-subtitle">${current.label}建议</p>
+          <div class="outfit-card" style="background:${current.bg}"><div class="outfit-card-main">${garment(current.main, "large")}</div><div class="outfit-meta"><h3>${esc(current.name)}</h3><p>${esc(current.note)}</p><div class="outfit-actions"><button class="button button-primary button-small" data-action="wear-this">${feedback === "wear" ? "已记录 ✓" : "就穿这套"}</button><button class="button button-secondary button-small" data-action="show-alternatives">换一套</button></div></div></div>
         </section>
         <aside class="side-stack">
           <section class="card insight-card"><h2>当季衣柜</h2><p>不需要一次整理全部衣服。先补齐最近会穿的就够了。</p><div class="closet-progress"><div class="progress-ring" style="--progress:${Math.min(state.closet.length / 15 * 100, 100)}%"><span>${state.closet.length}/15</span></div><div><strong>${state.closet.length >= 10 ? "已经足够开始推荐" : "再加几件就更准"}</strong><p>${state.closet.length >= 10 ? "你的夏秋衣柜已可用。" : `建议再添加 ${Math.max(0, 10 - state.closet.length)} 件常穿单品。`}</p></div></div><button class="text-button" data-view="closet">管理我的衣柜 →</button></section>
-          <section class="card color-mini"><div class="color-mini-top"><span class="season-pill"><i class="season-dot"></i>${COLOR_PROFILE.short}</span><button class="text-button" data-view="profile">查看</button></div><h3>今天的颜色方向</h3><p>雾霾蓝、冷白、浅灰，都是很稳的选择。</p><div class="swatches">${COLOR_PROFILE.recommended.slice(0,5).map((c) => colorFor(c.hex)).join("")}</div></section>
+          <section class="card color-mini"><div class="color-mini-top"><h2>穿衣色卡</h2><button class="text-button" data-view="profile">查看我的颜色</button></div>${palette ? `<p>${profile.kind === "demo" ? "示例 · " : ""}${palette.name}</p>${renderPalette(palette.colors)}` : `<p>完成新版测试后，这里会显示你的推荐色。</p><button class="text-button" data-action="start-quiz">重新测试 →</button>`}</section>
           <section class="tip"><b>小提示</b><br>${state.closet.length ? "你今天选择“就穿这套”后，明天的推荐会更懂你。" : "上传衣服时不必拍得完美；先记录颜色和类别即可。"}</section>
         </aside>
       </div>
-      <section class="outfit-ideas"><div class="section-title-row"><h2>再给我两个选择</h2><button class="text-button" data-action="show-alternatives">刷新推荐 →</button></div><div class="mini-outfits">${looks.slice(1).map((look, index) => `<button class="mini-outfit" data-action="select-outfit" data-index="${index + 1}"><div class="mini-look" style="background:${look.bg}"><span>${look.main.icon || iconFor(look.main.type)}</span></div><strong>${look.label}</strong><small>${look.score}% 匹配 · ${esc(look.note)}</small></button>`).join("")}</div></section>
+      <section class="outfit-ideas"><div class="section-title-row"><h2>再给我两个选择</h2><button class="text-button" data-action="show-alternatives">刷新推荐 →</button></div><div class="mini-outfits">${looks.slice(1).map((look, index) => `<button class="mini-outfit" data-action="select-outfit" data-index="${index + 1}"><div class="mini-look" style="background:${look.bg}"><span>${look.main.icon || iconFor(look.main.type)}</span></div><strong>${look.label}</strong><small>${esc(look.note)}</small></button>`).join("")}</div></section>
     </section>`;
 }
 
@@ -293,15 +256,22 @@ function renderCloset() {
 }
 
 function renderProfile() {
-  if (!state.profile) {
-    return `<section class="page"><header class="page-header"><div><span class="eyebrow">PERSONAL COLOR</span><h1>我的颜色</h1></div></header><div class="card profile-empty"><div class="empty-icon">✦</div><h2>还没有你的色彩参考</h2><p>完成一个 2 分钟的小测试，找到更衬你的颜色方向。</p><button class="button button-primary" data-action="start-quiz">开始测试</button></div></section>`;
-  }
-  const p = COLOR_PROFILE;
-  const tag = (item) => `<span class="color-tag"><span style="background:${item.hex}"></span>${item.name}</span>`;
-  return `
-    <section class="page"><header class="page-header"><div><span class="eyebrow">PERSONAL COLOR</span><h1>我的颜色</h1><p class="subcopy">这是穿衣参考，会随着你实际喜欢的搭配慢慢变得更懂你。</p></div><button class="button button-secondary button-small" data-action="restart-quiz">重新测试</button></header>
-      <div class="profile-layout"><article class="profile-season"><span class="season-pill"><i class="season-dot"></i>你的结果</span><h2>${p.season}</h2><p>柔和的冷色比浓烈的暖色更容易带来干净、均匀的肤色观感。</p><p>当前参考度：${p.confidence}%</p></article><article class="card profile-details"><h2>你的色彩轮廓</h2><div class="metric-row"><span>冷暖</span><div class="metric-line"><span style="width:72%"></span></div><b>冷调</b></div><div class="metric-row"><span>明度</span><div class="metric-line"><span style="width:72%"></span></div><b>中高</b></div><div class="metric-row"><span>饱和度</span><div class="metric-line"><span style="width:35%"></span></div><b>偏低</b></div><h3>推荐优先尝试</h3><div class="color-tags">${p.recommended.map(tag).join("")}</div><h3>可谨慎尝试</h3><div class="color-tags">${p.careful.map(tag).join("")}</div></article></div>
+  const { profile } = state;
+  if (profile?.kind === "color-test-v2" || profile?.kind === "demo") {
+    return `<section class="page color-result">
+      ${renderColorSummary(profile)}
+      <div class="result-action"><button class="button button-secondary" data-action="restart-quiz">重新测试</button></div>
     </section>`;
+  }
+
+  return `<section class="page color-result">
+    <header class="page-header"><div><h1>我的颜色</h1></div></header>
+    <div class="card profile-empty">
+      <h2>${profile ? "新版颜色测试已上线" : "还没有你的穿衣色卡"}</h2>
+      <p>${profile ? "完成 6 道色卡对比题，就能更新你的个人色彩结果。" : "比较 6 组服装颜色，看看哪些颜色可以先试穿。"}</p>
+      <button class="button button-primary" data-action="start-quiz">${profile ? "重新测试" : "开始颜色测试"}</button>
+    </div>
+  </section>`;
 }
 
 function addClothingModal() {
@@ -381,12 +351,51 @@ function handleAction(event, element) {
     closeModal();
   }
   if (action === "go-home") { currentView = state.profile ? "today" : "landing"; render(); }
-  if (action === "start-quiz" || action === "restart-quiz") { quizIndex = 0; quizAnswers = []; currentView = "quiz"; render(); }
-  if (action === "open-demo") { state.profile = COLOR_PROFILE; state.closet = DEMO_CLOTHES.map((item) => ({ ...item })); saveState(); currentView = "today"; render(); showToast("已载入演示衣柜"); }
-  if (action === "select-answer") { quizAnswers[quizIndex] = Number(element.dataset.index); render(); }
-  if (action === "quiz-back") { if (quizIndex === 0) { currentView = "landing"; } else { quizIndex -= 1; } render(); }
-  if (action === "quiz-next") { if (quizAnswers[quizIndex] === undefined) return; if (quizIndex < QUIZ.length - 1) { quizIndex += 1; currentView = "quiz"; } else { currentView = "result"; } render(); }
-  if (action === "continue-closet") { state.profile = COLOR_PROFILE; saveState(); currentView = "closet"; render(); showToast("你的色彩参考已保存到本设备"); }
+  if (action === "start-quiz" || action === "restart-quiz") {
+    quizReturnView = currentView;
+    quizIndex = 0;
+    quizAnswers = [];
+    currentView = "quiz";
+    render();
+  }
+  if (action === "open-demo") {
+    if (!state.profile) {
+      state.profile = { kind: "demo", warmth: "cool", clarity: "soft" };
+      if (!state.closet.length) state.closet = DEMO_CLOTHES.map((item) => ({ ...item }));
+      saveState();
+    }
+    currentView = "today";
+    render();
+    showToast("正在查看穿搭示例");
+  }
+  if (action === "select-answer") {
+    quizAnswers[quizIndex] = Number(element.dataset.index);
+    document.querySelectorAll(".quiz-choice").forEach((button) => {
+      button.setAttribute("aria-pressed", String(button === element));
+    });
+    document.querySelector('[data-action="quiz-next"]').disabled = false;
+  }
+  if (action === "quiz-back") {
+    if (quizIndex === 0) currentView = quizReturnView;
+    else quizIndex -= 1;
+    render();
+  }
+  if (action === "quiz-next") {
+    if (quizAnswers[quizIndex] === undefined) return;
+    if (quizIndex + 1 < COLOR_QUESTIONS.length) {
+      quizIndex += 1;
+    } else {
+      state.profile = scoreColorTest(quizAnswers);
+      saveState();
+      currentView = "result";
+    }
+    render();
+  }
+  if (action === "continue-closet") {
+    currentView = "closet";
+    window.scrollTo(0, 0);
+    render();
+  }
   if (action === "open-add") addClothingModal();
   if (action === "add-demo") { state.closet = [...DEMO_CLOTHES.map((item) => ({ ...item })), ...state.closet]; saveState(); render(); showToast("已添加 10 件示例单品"); }
   if (action === "filter-closet") { closetFilter = element.dataset.filter; render(); }
@@ -399,4 +408,3 @@ function handleAction(event, element) {
 }
 
 render();
-

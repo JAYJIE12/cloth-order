@@ -30,7 +30,7 @@ jobs:
           fi
           echo "value=$VERSION" >> "$GITHUB_OUTPUT"
 
-      - name: Create GitHub release and generated notes
+      - name: Publish GitHub release with changelog
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.version.outputs.value }}
@@ -39,9 +39,21 @@ jobs:
             echo "$VERSION already exists; skipping."
             exit 0
           fi
+          notes="$RUNNER_TEMP/release-notes.md"
+          awk -v version="$VERSION" '
+            /^## / {
+              if (found) exit
+              if ($2 == version) found = 1
+              next
+            }
+            found { sub(/\r$/, ""); print }
+          ' CHANGELOG.md > "$notes"
+          if ! grep -q '[^[:space:]]' "$notes"; then
+            echo "::error::CHANGELOG.md is missing release notes for $VERSION"
+            exit 1
+          fi
           gh release create "$VERSION" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
             --title "cloth-order $VERSION" \
-            --generate-notes
-
+            --notes-file "$notes"

@@ -1,4 +1,4 @@
-name: Deploy cloth-order V0.1
+name: Deploy cloth-order to GitHub Pages
 
 on:
   push:
@@ -34,4 +34,3 @@ jobs:
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
-
